@@ -1,6 +1,9 @@
 
 #pragma once
 #include "scene/scene.h"
+#include "core/state.h"
+#include "core/snake.h"
+#include "core/food.h"
 #include <SDL3/SDL.h>
 
 #define SCREEN_WIDTH 640
@@ -9,6 +12,10 @@
 typedef struct {
   SDL_Window *window;
   GameScene *scene; // 游戏场景
+  GameStateData gameState; // 游戏状态
+  Snake snake; // 贪吃蛇
+  FoodManager foodManager; // 食物管理器
+  Uint64 lastFrameTime; // 上一帧时间
 } AppState;
 
 /**
