@@ -125,7 +125,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   // 清除屏幕并渲染动态背景特效
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
+
   // 渲染背景特效（禁用深度测试，确保背景在最底层）
   glDisable(GL_DEPTH_TEST);
   render_background_effect(&state->bgEffect);
@@ -175,25 +175,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
   if (event->type == SDL_EVENT_QUIT) {
     return SDL_APP_SUCCESS;
-  }
-
-  // 处理窗口大小变化事件
-  if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-    SDL_Window *window = SDL_GetWindowFromID(event->window.windowID);
-    if (window == state->window) {
-      // 获取新的窗口尺寸
-      int newWidth, newHeight;
-      SDL_GetWindowSize(window, &newWidth, &newHeight);
-
-      // 更新游戏场景以适应新的窗口尺寸
-      update_game_scene_size(state->scene, newWidth, newHeight);
-
-      // 更新背景特效的屏幕尺寸
-      resize_background_effect(&state->bgEffect, newWidth, newHeight);
-
-      // 更新视口
-      glViewport(0, 0, newWidth, newHeight);
-    }
   }
 
   // 处理键盘输入事件

@@ -19,34 +19,20 @@ void world_to_gl_coords(const CoordinateSystem *coord, float worldX,
   float normalizedX = (worldX - coord->minX) / (coord->maxX - coord->minX);
   float normalizedY = (worldY - coord->minY) / (coord->maxY - coord->minY);
 
-  // 将归一化坐标转换到OpenGL的[-1, 1]范围
-  *glX = normalizedX * 2.0f - 1.0f;
-  *glY = normalizedY * 2.0f - 1.0f;
-
-  // 游戏区域边长等于窗口高度的80%
-  float gameAreaSize = 0.8f; // 游戏区域边长占窗口高度的80%
-
-  // 计算窗口宽高比
-  float windowAspectRatio =
-      (float)coord->screenWidth / (float)coord->screenHeight;
-
-  // 计算水平和垂直偏移量，使游戏区域居中
-  float horizontalOffset = 0.0f;
-  float verticalOffset = 0.0f;
-
-  if (windowAspectRatio > 1.0f) {
-    // 宽屏窗口：游戏区域水平居中，左右两侧留白
-    horizontalOffset = (1.0f - gameAreaSize) / 2.0f;
-    // 在宽屏窗口下，游戏区域宽度需要按宽高比缩放，以保持正方形
-    *glX = *glX * gameAreaSize / windowAspectRatio + horizontalOffset;
-    *glY = *glY * gameAreaSize + verticalOffset;
-  } else {
-    // 高屏窗口：游戏区域垂直居中，上下两侧留白
-    verticalOffset = (1.0f - gameAreaSize) / 2.0f;
-    // 在高屏窗口下，游戏区域高度需要按宽高比缩放，以保持正方形
-    *glX = *glX * gameAreaSize + horizontalOffset;
-    *glY = *glY * gameAreaSize * windowAspectRatio + verticalOffset;
-  }
+  // 游戏区域边长设置为600像素
+  float gameAreaSize = 600.0f;
+  
+  // 计算游戏区域在窗口中的位置（居中显示）
+  float gameAreaLeft = (coord->screenWidth - gameAreaSize) / 2.0f;
+  float gameAreaTop = (coord->screenHeight - gameAreaSize) / 2.0f;
+  
+  // 将归一化坐标转换为像素坐标
+  float pixelX = normalizedX * gameAreaSize + gameAreaLeft;
+  float pixelY = normalizedY * gameAreaSize + gameAreaTop;
+  
+  // 将像素坐标转换为OpenGL的[-1, 1]范围
+  *glX = (pixelX / coord->screenWidth) * 2.0f - 1.0f;
+  *glY = (pixelY / coord->screenHeight) * 2.0f - 1.0f;
 
   // 注意：OpenGL的Y轴方向与屏幕Y轴方向相反，所以需要翻转Y轴
   *glY = -*glY;
@@ -58,27 +44,16 @@ void world_to_gl_size(const CoordinateSystem *coord, float worldWidth,
   float normalizedWidth = worldWidth / (coord->maxX - coord->minX);
   float normalizedHeight = worldHeight / (coord->maxY - coord->minY);
 
-  // 将归一化尺寸转换到OpenGL的[-1, 1]范围
-  *glWidth = normalizedWidth * 2.0f;
-  *glHeight = normalizedHeight * 2.0f;
+  // 游戏区域边长设置为600像素
+  float gameAreaSize = 600.0f;
 
-  // 游戏区域边长等于窗口高度的80%
-  float gameAreaSize = 0.8f; // 游戏区域边长占窗口高度的80%
+  // 将归一化尺寸转换为像素尺寸
+  float pixelWidth = normalizedWidth * gameAreaSize;
+  float pixelHeight = normalizedHeight * gameAreaSize;
 
-  // 计算窗口宽高比
-  float windowAspectRatio =
-      (float)coord->screenWidth / (float)coord->screenHeight;
-
-  // 应用游戏区域缩放，保持正方形
-  if (windowAspectRatio > 1.0f) {
-    // 宽屏窗口：宽度按宽高比缩放
-    *glWidth *= gameAreaSize / windowAspectRatio;
-    *glHeight *= gameAreaSize;
-  } else {
-    // 高屏窗口：高度按宽高比缩放
-    *glWidth *= gameAreaSize;
-    *glHeight *= gameAreaSize * windowAspectRatio;
-  }
+  // 将像素尺寸转换为OpenGL的[-1, 1]范围
+  *glWidth = (pixelWidth / coord->screenWidth) * 2.0f;
+  *glHeight = (pixelHeight / coord->screenHeight) * 2.0f;
 }
 
 void create_square_vertices(const CoordinateSystem *coord, float worldX,
@@ -137,17 +112,4 @@ void create_square_vertices_with_texcoords(const CoordinateSystem *coord,
     vertices[i * 4 + 2] = texCoords[i * 2];     // U
     vertices[i * 4 + 3] = texCoords[i * 2 + 1]; // V
   }
-}
-
-/**
- * @brief 更新坐标系统的屏幕尺寸
- *
- * @param coord 坐标系统指针
- * @param screenWidth 新的屏幕宽度
- * @param screenHeight 新的屏幕高度
- */
-void update_coordinate_screen_size(CoordinateSystem *coord, int screenWidth,
-                                   int screenHeight) {
-  coord->screenWidth = screenWidth;
-  coord->screenHeight = screenHeight;
 }

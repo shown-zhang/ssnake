@@ -32,7 +32,7 @@ int create_window(AppState *state) {
   state->window =
       SDL_CreateWindow("贪吃蛇 - 3d",                           // 窗口标题
                        SCREEN_WIDTH, SCREEN_HEIGHT,             // 宽度、高度
-                       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE // 窗口标志
+                       SDL_WINDOW_OPENGL                        // 窗口标志（禁用resize）
       );
   if (!state->window) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "窗口创建失败: %s",

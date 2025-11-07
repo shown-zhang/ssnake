@@ -63,12 +63,3 @@ void world_to_gl_size(const CoordinateSystem *coord, float worldWidth,
  */
 void create_square_vertices(const CoordinateSystem *coord, float worldX,
                             float worldY, float worldSize, float vertices[8]);
-
-/**
- * @brief 更新坐标系统的屏幕尺寸
- * 
- * @param coord 坐标系统指针
- * @param screenWidth 新的屏幕宽度
- * @param screenHeight 新的屏幕高度
- */
-void update_coordinate_screen_size(CoordinateSystem *coord, int screenWidth, int screenHeight);

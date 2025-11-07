@@ -1,4 +1,5 @@
 #include "scene/scene.h"
+#include "window/window.h"
 #include <SDL3/SDL.h>
 
 // 网格线宽度（相对于格子大小的比例）
@@ -21,7 +22,7 @@ int init_game_scene(GameScene *scene, int gridWidth, int gridHeight,
   float worldWidth = gridWidth * gridSize;
   float worldHeight = gridHeight * gridSize;
   scene->coord =
-      init_coordinate_system(0, worldWidth, 0, worldHeight, 640, 480);
+      init_coordinate_system(0, worldWidth, 0, worldHeight, SCREEN_WIDTH, SCREEN_HEIGHT);
 
   // 初始化网格渲染器
   if (!init_square_renderer(&scene->gridRenderer, &scene->coord,
@@ -36,39 +37,28 @@ int init_game_scene(GameScene *scene, int gridWidth, int gridHeight,
 
 void render_game_scene(GameScene *scene) {
   // 渲染游戏区域包围线
-  float borderWidth = scene->gridSize * GRID_LINE_WIDTH * 2.0f; // 包围线比网格线稍粗
+  float borderWidth =
+      scene->gridSize * GRID_LINE_WIDTH * 2.0f; // 包围线比网格线稍粗
   float worldWidth = scene->gridWidth * scene->gridSize;
   float worldHeight = scene->gridHeight * scene->gridSize;
-  
+
   // 渲染上边界
-  render_rectangle(&scene->gridRenderer, worldWidth / 2.0f, 0.0f, worldWidth, borderWidth, scene->gridColor);
-  
+  render_rectangle(&scene->gridRenderer, worldWidth / 2.0f, 0.0f, worldWidth,
+                   borderWidth, scene->gridColor);
+
   // 渲染下边界
-  render_rectangle(&scene->gridRenderer, worldWidth / 2.0f, worldHeight, worldWidth, borderWidth, scene->gridColor);
-  
+  render_rectangle(&scene->gridRenderer, worldWidth / 2.0f, worldHeight,
+                   worldWidth, borderWidth, scene->gridColor);
+
   // 渲染左边界
-  render_rectangle(&scene->gridRenderer, 0.0f, worldHeight / 2.0f, borderWidth, worldHeight, scene->gridColor);
-  
+  render_rectangle(&scene->gridRenderer, 0.0f, worldHeight / 2.0f, borderWidth,
+                   worldHeight, scene->gridColor);
+
   // 渲染右边界
-  render_rectangle(&scene->gridRenderer, worldWidth, worldHeight / 2.0f, borderWidth, worldHeight, scene->gridColor);
+  render_rectangle(&scene->gridRenderer, worldWidth, worldHeight / 2.0f,
+                   borderWidth, worldHeight, scene->gridColor);
 }
 
 void cleanup_game_scene(GameScene *scene) {
   cleanup_square_renderer(&scene->gridRenderer);
-}
-
-/**
- * @brief 更新游戏场景以适应新的窗口尺寸
- *
- * @param scene 场景指针
- * @param screenWidth 新的屏幕宽度
- * @param screenHeight 新的屏幕高度
- */
-void update_game_scene_size(GameScene *scene, int screenWidth,
-                            int screenHeight) {
-  // 更新坐标系统的屏幕尺寸
-  update_coordinate_screen_size(&scene->coord, screenWidth, screenHeight);
-  
-  // 更新网格渲染器中的坐标系统副本
-  update_coordinate_screen_size(&scene->gridRenderer.coord, screenWidth, screenHeight);
 }

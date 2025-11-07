@@ -7,8 +7,8 @@
 #include "scene/scene.h"
 #include <SDL3/SDL.h>
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#define SCREEN_WIDTH 1024
+#define SCREEN_HEIGHT 768
 
 typedef struct {
   SDL_Window *window;
