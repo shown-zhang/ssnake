@@ -1,6 +1,6 @@
 #include "render/shader.h"
+#include "utils/memory.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 int read_shader_from_file(const char *filename, char **shader_source) {
@@ -18,7 +18,7 @@ int read_shader_from_file(const char *filename, char **shader_source) {
   // 文件内部指针指向文件开头
   fseek(fp, 0, SEEK_SET);
   // 分配内存
-  *shader_source = (char *)malloc(fsize + 1);
+  *shader_source = NEW_ARRAY(char, fsize + 1);
   if (*shader_source == NULL) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                  "读取着色器文件[%s]时,内存分配失败 ", filename);
@@ -80,7 +80,8 @@ GLuint create_shader(const char **filenames, int count) {
 
     // 记录着色器对象，在链接后可以删除
     shaders[i] = someShader;
-    free(shader_source);
+    // 释放着色器源代码内存
+    FREE(shader_source);
   }
 
   glLinkProgram(shaderProgram);
