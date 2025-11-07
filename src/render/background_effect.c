@@ -1,7 +1,4 @@
 #include "render/background_effect.h"
-#include "utils/memory.h"
-#include <math.h>
-#include <stdio.h>
 
 // 背景着色器顶点着色器源码
 static const char *background_vertex_shader_source =
@@ -140,6 +137,93 @@ static const char *background_fragment_shader_pulse =
     "    FragColor = vec4(finalColor, 1.0);\n"
     "}\n";
 
+// 背景着色器片段着色器源码 - 暖色调随机动画效果
+static const char *background_fragment_shader_warm_random =
+    "#version 330 core\n"
+    "in vec2 fragCoord;\n"
+    "out vec4 FragColor;\n"
+    "uniform float uTime;\n"
+    "uniform float uIntensity;\n"
+    "uniform vec2 uResolution;\n"
+    "\n"
+    "// 噪声函数\n"
+    "float hash(vec2 p) {\n"
+    "    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);\n"
+    "}\n"
+    "\n"
+    "float noise(vec2 p) {\n"
+    "    vec2 i = floor(p);\n"
+    "    vec2 f = fract(p);\n"
+    "    float a = hash(i);\n"
+    "    float b = hash(i + vec2(1.0, 0.0));\n"
+    "    float c = hash(i + vec2(0.0, 1.0));\n"
+    "    float d = hash(i + vec2(1.0, 1.0));\n"
+    "    vec2 u = f * f * (3.0 - 2.0 * f);\n"
+    "    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * "
+    "u.y;\n"
+    "}\n"
+    "\n"
+    "void main()\n"
+    "{\n"
+    "    vec2 uv = fragCoord * 0.5 + 0.5;\n"
+    "    uv.x *= uResolution.x / uResolution.y;\n"
+    "    \n"
+    "    // 创建多个随机移动的暖色调光点\n"
+    "    vec3 finalColor = vec3(0.0);\n"
+    "    \n"
+    "    // 暖色调基础颜色\n"
+    "    vec3 baseColor1 = vec3(0.8, 0.4, 0.1); // 橙黄色\n"
+    "    vec3 baseColor2 = vec3(0.9, 0.6, 0.2); // 金黄色\n"
+    "    vec3 baseColor3 = vec3(0.7, 0.3, 0.05); // 深橙色\n"
+    "    \n"
+    "    // 多个随机移动的光点\n"
+    "    for (int i = 0; i < 8; i++) {\n"
+    "        float seed = float(i) * 123.456;\n"
+    "        vec2 center = vec2(\n"
+    "            sin(uTime * (0.3 + hash(vec2(seed, 1.0)) * 0.5)) * 0.4 + "
+    "0.5,\n"
+    "            cos(uTime * (0.2 + hash(vec2(seed, 2.0)) * 0.6)) * 0.4 + 0.5\n"
+    "        );\n"
+    "        \n"
+    "        float dist = distance(uv, center);\n"
+    "        float radius = 0.1 + hash(vec2(seed, 3.0)) * 0.2;\n"
+    "        float glow = 1.0 - smoothstep(0.0, radius, dist);\n"
+    "        \n"
+    "        // 随机选择暖色调\n"
+    "        vec3 color = mix(baseColor1, baseColor2, hash(vec2(seed, 4.0)));\n"
+    "        color = mix(color, baseColor3, hash(vec2(seed, 5.0)) * 0.5);\n"
+    "        \n"
+    "        // 添加脉动效果\n"
+    "        float pulse = sin(uTime * (2.0 + hash(vec2(seed, 6.0)) * 3.0)) * "
+    "0.3 + 0.7;\n"
+    "        finalColor += color * glow * pulse * 0.3;\n"
+    "    }\n"
+    "    \n"
+    "    // 添加暖色调背景渐变\n"
+    "    vec3 bgColor1 = vec3(0.3, 0.15, 0.05); // 深棕色\n"
+    "    vec3 bgColor2 = vec3(0.5, 0.25, 0.1);  // 中棕色\n"
+    "    \n"
+    "    float bgGradient = uv.y * 0.5 + 0.3;\n"
+    "    vec3 backgroundColor = mix(bgColor1, bgColor2, bgGradient);\n"
+    "    \n"
+    "    // 添加动态噪声纹理\n"
+    "    float noiseValue = noise(uv * 8.0 + uTime * 0.5);\n"
+    "    backgroundColor += noiseValue * 0.1;\n"
+    "    \n"
+    "    // 混合光点和背景\n"
+    "    finalColor += backgroundColor;\n"
+    "    \n"
+    "    // 强度控制\n"
+    "    float intensity = uIntensity * 0.8 + 0.2;\n"
+    "    finalColor *= intensity;\n"
+    "    \n"
+    "    // 添加全局脉动\n"
+    "    float globalPulse = sin(uTime * 1.5) * 0.05 + 0.95;\n"
+    "    finalColor *= globalPulse;\n"
+    "    \n"
+    "    FragColor = vec4(finalColor, 1.0);\n"
+    "}\n";
+
 // 编译着色器程序
 static GLuint compile_background_shader(const char *fragmentSource) {
   GLuint vertexShader, fragmentShader;
@@ -201,8 +285,10 @@ static const char *get_fragment_shader_source(BackgroundEffectType type) {
     return background_fragment_shader_gradient;
   case BACKGROUND_EFFECT_PULSE:
     return background_fragment_shader_pulse;
+  case BACKGROUND_EFFECT_WARM_RANDOM:
+    return background_fragment_shader_warm_random;
   default:
-    return background_fragment_shader_wave;
+    return background_fragment_shader_warm_random;
   }
 }
 
@@ -213,7 +299,7 @@ int init_background_effect(BackgroundEffectManager *manager, int screenWidth,
   }
 
   // 初始化默认值
-  manager->currentEffect = BACKGROUND_EFFECT_WAVE;
+  manager->currentEffect = BACKGROUND_EFFECT_WARM_RANDOM;
   manager->time = 0.0f;
   manager->speed = 1.0f;
   manager->intensity = 1.0f;

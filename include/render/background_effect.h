@@ -9,6 +9,7 @@ typedef enum {
   BACKGROUND_EFFECT_WAVE = 0, // 波浪效果
   BACKGROUND_EFFECT_GRADIENT, // 渐变效果
   BACKGROUND_EFFECT_PULSE,    // 脉冲效果
+  BACKGROUND_EFFECT_WARM_RANDOM, // 暖色调随机动画效果
   BACKGROUND_EFFECT_COUNT     // 效果数量
 } BackgroundEffectType;
 
