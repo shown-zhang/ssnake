@@ -25,14 +25,15 @@ void world_to_gl_coords(const CoordinateSystem *coord, float worldX,
 
   // 游戏区域边长等于窗口高度的80%
   float gameAreaSize = 0.8f; // 游戏区域边长占窗口高度的80%
-  
+
   // 计算窗口宽高比
-  float windowAspectRatio = (float)coord->screenWidth / (float)coord->screenHeight;
-  
+  float windowAspectRatio =
+      (float)coord->screenWidth / (float)coord->screenHeight;
+
   // 计算水平和垂直偏移量，使游戏区域居中
   float horizontalOffset = 0.0f;
   float verticalOffset = 0.0f;
-  
+
   if (windowAspectRatio > 1.0f) {
     // 宽屏窗口：游戏区域水平居中，左右两侧留白
     horizontalOffset = (1.0f - gameAreaSize) / 2.0f;
@@ -63,9 +64,10 @@ void world_to_gl_size(const CoordinateSystem *coord, float worldWidth,
 
   // 游戏区域边长等于窗口高度的80%
   float gameAreaSize = 0.8f; // 游戏区域边长占窗口高度的80%
-  
+
   // 计算窗口宽高比
-  float windowAspectRatio = (float)coord->screenWidth / (float)coord->screenHeight;
+  float windowAspectRatio =
+      (float)coord->screenWidth / (float)coord->screenHeight;
 
   // 应用游戏区域缩放，保持正方形
   if (windowAspectRatio > 1.0f) {

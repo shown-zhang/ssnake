@@ -41,6 +41,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
     return SDL_APP_FAILURE;
   }
 
+  // 初始化背景特效管理器
+  if (!init_background_effect(&state->bgEffect, SCREEN_WIDTH, SCREEN_HEIGHT)) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "初始化背景特效失败");
+    return SDL_APP_FAILURE;
+  }
+
   // 初始化游戏状态
   init_game_state(&state->gameState, &gameConfig);
 
@@ -113,9 +119,17 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
   }
 
-  // 设置背景色为深灰色，以便更好地看到白色网格
-  glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+  // 更新背景特效
+  update_background_effect(&state->bgEffect, deltaTime);
+
+  // 清除屏幕并渲染动态背景特效
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  
+  // 渲染背景特效（禁用深度测试，确保背景在最底层）
+  glDisable(GL_DEPTH_TEST);
+  render_background_effect(&state->bgEffect);
+  glEnable(GL_DEPTH_TEST);
 
   // 渲染游戏场景（网格）
   render_game_scene(state->scene);
@@ -173,6 +187,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
       // 更新游戏场景以适应新的窗口尺寸
       update_game_scene_size(state->scene, newWidth, newHeight);
+
+      // 更新背景特效的屏幕尺寸
+      resize_background_effect(&state->bgEffect, newWidth, newHeight);
 
       // 更新视口
       glViewport(0, 0, newWidth, newHeight);
@@ -242,6 +259,9 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
       cleanup_game_scene(state->scene);
       FREE(state->scene);
     }
+
+    // 清理背景特效管理器
+    cleanup_background_effect(&state->bgEffect);
 
     // 清理贪吃蛇和食物管理器
     cleanup_snake(&state->snake);
