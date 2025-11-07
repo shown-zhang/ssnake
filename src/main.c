@@ -10,8 +10,8 @@
 
 // 游戏配置
 static const GameConfig gameConfig = {
-    .gridWidth = 32,
-    .gridHeight = 24,
+    .gridWidth = 25,
+    .gridHeight = 25,
     .gridSize = 10,
     .initialSnakeLength = 3,
     .maxFoodCount = 5,

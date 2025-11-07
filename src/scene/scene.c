@@ -4,9 +4,6 @@
 // 网格线宽度（相对于格子大小的比例）
 #define GRID_LINE_WIDTH 0.05f
 
-// 前向声明静态函数
-static void render_grid_lines(GameScene *scene);
-
 int init_game_scene(GameScene *scene, int gridWidth, int gridHeight,
                     float gridSize, float gridColor[4]) {
   // 设置场景参数
@@ -38,59 +35,40 @@ int init_game_scene(GameScene *scene, int gridWidth, int gridHeight,
 }
 
 void render_game_scene(GameScene *scene) {
-  // 渲染网格线
-  render_grid_lines(scene);
+  // 渲染游戏区域包围线
+  float borderWidth = scene->gridSize * GRID_LINE_WIDTH * 2.0f; // 包围线比网格线稍粗
+  float worldWidth = scene->gridWidth * scene->gridSize;
+  float worldHeight = scene->gridHeight * scene->gridSize;
+  
+  // 渲染上边界
+  render_rectangle(&scene->gridRenderer, worldWidth / 2.0f, 0.0f, worldWidth, borderWidth, scene->gridColor);
+  
+  // 渲染下边界
+  render_rectangle(&scene->gridRenderer, worldWidth / 2.0f, worldHeight, worldWidth, borderWidth, scene->gridColor);
+  
+  // 渲染左边界
+  render_rectangle(&scene->gridRenderer, 0.0f, worldHeight / 2.0f, borderWidth, worldHeight, scene->gridColor);
+  
+  // 渲染右边界
+  render_rectangle(&scene->gridRenderer, worldWidth, worldHeight / 2.0f, borderWidth, worldHeight, scene->gridColor);
 }
 
 void cleanup_game_scene(GameScene *scene) {
-    cleanup_square_renderer(&scene->gridRenderer);
+  cleanup_square_renderer(&scene->gridRenderer);
 }
 
 /**
  * @brief 更新游戏场景以适应新的窗口尺寸
- * 
+ *
  * @param scene 场景指针
  * @param screenWidth 新的屏幕宽度
  * @param screenHeight 新的屏幕高度
  */
-void update_game_scene_size(GameScene *scene, int screenWidth, int screenHeight) {
-    // 更新坐标系统的屏幕尺寸
-    update_coordinate_screen_size(&scene->coord, screenWidth, screenHeight);
-}
-
-/**
- * @brief 渲染网格线
- *
- * @param scene 场景指针
- */
-static void render_grid_lines(GameScene *scene) {
-  float lineWidth = scene->gridSize * GRID_LINE_WIDTH;
-
-  // 渲染水平网格线
-  for (int y = 0; y <= scene->gridHeight; y++) {
-    // 计算线的世界坐标
-    float lineY = y * scene->gridSize;
-
-    // 渲染一条从左边到右边的水平线
-    // 线的中心在网格线上，宽度为lineWidth，长度为整个网格宽度
-    float lineLength = scene->gridWidth * scene->gridSize;
-    float lineCenterX = lineLength / 2.0f;
-
-    render_rectangle(&scene->gridRenderer, lineCenterX, lineY, lineLength,
-                     lineWidth, scene->gridColor);
-  }
-
-  // 渲染垂直网格线
-  for (int x = 0; x <= scene->gridWidth; x++) {
-    // 计算线的世界坐标
-    float lineX = x * scene->gridSize;
-
-    // 渲染一条从上到下的垂直线
-    // 线的中心在网格线上，宽度为lineWidth，长度为整个网格高度
-    float lineLength = scene->gridHeight * scene->gridSize;
-    float lineCenterY = lineLength / 2.0f;
-
-    render_rectangle(&scene->gridRenderer, lineX, lineCenterY, lineWidth,
-                     lineLength, scene->gridColor);
-  }
+void update_game_scene_size(GameScene *scene, int screenWidth,
+                            int screenHeight) {
+  // 更新坐标系统的屏幕尺寸
+  update_coordinate_screen_size(&scene->coord, screenWidth, screenHeight);
+  
+  // 更新网格渲染器中的坐标系统副本
+  update_coordinate_screen_size(&scene->gridRenderer.coord, screenWidth, screenHeight);
 }

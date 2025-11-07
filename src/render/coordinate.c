@@ -23,16 +23,28 @@ void world_to_gl_coords(const CoordinateSystem *coord, float worldX,
   *glX = normalizedX * 2.0f - 1.0f;
   *glY = normalizedY * 2.0f - 1.0f;
 
-  // 根据窗口宽高比调整坐标，保持网格比例
-  float aspectRatio = (float)coord->screenWidth / (float)coord->screenHeight;
-  float targetAspectRatio = (coord->maxX - coord->minX) / (coord->maxY - coord->minY);
+  // 游戏区域边长等于窗口高度的80%
+  float gameAreaSize = 0.8f; // 游戏区域边长占窗口高度的80%
   
-  if (aspectRatio > targetAspectRatio) {
-    // 窗口比网格宽，在X轴方向缩放
-    *glX *= targetAspectRatio / aspectRatio;
+  // 计算窗口宽高比
+  float windowAspectRatio = (float)coord->screenWidth / (float)coord->screenHeight;
+  
+  // 计算水平和垂直偏移量，使游戏区域居中
+  float horizontalOffset = 0.0f;
+  float verticalOffset = 0.0f;
+  
+  if (windowAspectRatio > 1.0f) {
+    // 宽屏窗口：游戏区域水平居中，左右两侧留白
+    horizontalOffset = (1.0f - gameAreaSize) / 2.0f;
+    // 在宽屏窗口下，游戏区域宽度需要按宽高比缩放，以保持正方形
+    *glX = *glX * gameAreaSize / windowAspectRatio + horizontalOffset;
+    *glY = *glY * gameAreaSize + verticalOffset;
   } else {
-    // 窗口比网格高，在Y轴方向缩放
-    *glY *= aspectRatio / targetAspectRatio;
+    // 高屏窗口：游戏区域垂直居中，上下两侧留白
+    verticalOffset = (1.0f - gameAreaSize) / 2.0f;
+    // 在高屏窗口下，游戏区域高度需要按宽高比缩放，以保持正方形
+    *glX = *glX * gameAreaSize + horizontalOffset;
+    *glY = *glY * gameAreaSize * windowAspectRatio + verticalOffset;
   }
 
   // 注意：OpenGL的Y轴方向与屏幕Y轴方向相反，所以需要翻转Y轴
@@ -49,16 +61,21 @@ void world_to_gl_size(const CoordinateSystem *coord, float worldWidth,
   *glWidth = normalizedWidth * 2.0f;
   *glHeight = normalizedHeight * 2.0f;
 
-  // 根据窗口宽高比调整尺寸，保持网格比例
-  float aspectRatio = (float)coord->screenWidth / (float)coord->screenHeight;
-  float targetAspectRatio = (coord->maxX - coord->minX) / (coord->maxY - coord->minY);
+  // 游戏区域边长等于窗口高度的80%
+  float gameAreaSize = 0.8f; // 游戏区域边长占窗口高度的80%
   
-  if (aspectRatio > targetAspectRatio) {
-    // 窗口比网格宽，在X轴方向缩放
-    *glWidth *= targetAspectRatio / aspectRatio;
+  // 计算窗口宽高比
+  float windowAspectRatio = (float)coord->screenWidth / (float)coord->screenHeight;
+
+  // 应用游戏区域缩放，保持正方形
+  if (windowAspectRatio > 1.0f) {
+    // 宽屏窗口：宽度按宽高比缩放
+    *glWidth *= gameAreaSize / windowAspectRatio;
+    *glHeight *= gameAreaSize;
   } else {
-    // 窗口比网格高，在Y轴方向缩放
-    *glHeight *= aspectRatio / targetAspectRatio;
+    // 高屏窗口：高度按宽高比缩放
+    *glWidth *= gameAreaSize;
+    *glHeight *= gameAreaSize * windowAspectRatio;
   }
 }
 
@@ -90,7 +107,8 @@ void create_square_vertices(const CoordinateSystem *coord, float worldX,
  * @param worldX 方格中心的世界X坐标
  * @param worldY 方格中心的世界Y坐标
  * @param worldSize 方格的世界尺寸
- * @param vertices 输出的顶点数组（需要至少16个float的空间：4个顶点，每个顶点有位置和纹理坐标）
+ * @param vertices
+ * 输出的顶点数组（需要至少16个float的空间：4个顶点，每个顶点有位置和纹理坐标）
  */
 void create_square_vertices_with_texcoords(const CoordinateSystem *coord,
                                            float worldX, float worldY,
@@ -126,7 +144,8 @@ void create_square_vertices_with_texcoords(const CoordinateSystem *coord,
  * @param screenWidth 新的屏幕宽度
  * @param screenHeight 新的屏幕高度
  */
-void update_coordinate_screen_size(CoordinateSystem *coord, int screenWidth, int screenHeight) {
-    coord->screenWidth = screenWidth;
-    coord->screenHeight = screenHeight;
+void update_coordinate_screen_size(CoordinateSystem *coord, int screenWidth,
+                                   int screenHeight) {
+  coord->screenWidth = screenWidth;
+  coord->screenHeight = screenHeight;
 }
