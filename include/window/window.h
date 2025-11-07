@@ -1,5 +1,6 @@
 
 #pragma once
+#include "scene/scene.h"
 #include <SDL3/SDL.h>
 
 #define SCREEN_WIDTH 640
@@ -7,6 +8,7 @@
 
 typedef struct {
   SDL_Window *window;
+  GameScene *scene; // 游戏场景
 } AppState;
 
 /**
