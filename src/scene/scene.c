@@ -43,7 +43,19 @@ void render_game_scene(GameScene *scene) {
 }
 
 void cleanup_game_scene(GameScene *scene) {
-  cleanup_square_renderer(&scene->gridRenderer);
+    cleanup_square_renderer(&scene->gridRenderer);
+}
+
+/**
+ * @brief 更新游戏场景以适应新的窗口尺寸
+ * 
+ * @param scene 场景指针
+ * @param screenWidth 新的屏幕宽度
+ * @param screenHeight 新的屏幕高度
+ */
+void update_game_scene_size(GameScene *scene, int screenWidth, int screenHeight) {
+    // 更新坐标系统的屏幕尺寸
+    update_coordinate_screen_size(&scene->coord, screenWidth, screenHeight);
 }
 
 /**

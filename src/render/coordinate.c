@@ -23,6 +23,18 @@ void world_to_gl_coords(const CoordinateSystem *coord, float worldX,
   *glX = normalizedX * 2.0f - 1.0f;
   *glY = normalizedY * 2.0f - 1.0f;
 
+  // 根据窗口宽高比调整坐标，保持网格比例
+  float aspectRatio = (float)coord->screenWidth / (float)coord->screenHeight;
+  float targetAspectRatio = (coord->maxX - coord->minX) / (coord->maxY - coord->minY);
+  
+  if (aspectRatio > targetAspectRatio) {
+    // 窗口比网格宽，在X轴方向缩放
+    *glX *= targetAspectRatio / aspectRatio;
+  } else {
+    // 窗口比网格高，在Y轴方向缩放
+    *glY *= aspectRatio / targetAspectRatio;
+  }
+
   // 注意：OpenGL的Y轴方向与屏幕Y轴方向相反，所以需要翻转Y轴
   *glY = -*glY;
 }
@@ -36,6 +48,18 @@ void world_to_gl_size(const CoordinateSystem *coord, float worldWidth,
   // 将归一化尺寸转换到OpenGL的[-1, 1]范围
   *glWidth = normalizedWidth * 2.0f;
   *glHeight = normalizedHeight * 2.0f;
+
+  // 根据窗口宽高比调整尺寸，保持网格比例
+  float aspectRatio = (float)coord->screenWidth / (float)coord->screenHeight;
+  float targetAspectRatio = (coord->maxX - coord->minX) / (coord->maxY - coord->minY);
+  
+  if (aspectRatio > targetAspectRatio) {
+    // 窗口比网格宽，在X轴方向缩放
+    *glWidth *= targetAspectRatio / aspectRatio;
+  } else {
+    // 窗口比网格高，在Y轴方向缩放
+    *glHeight *= aspectRatio / targetAspectRatio;
+  }
 }
 
 void create_square_vertices(const CoordinateSystem *coord, float worldX,
@@ -66,8 +90,7 @@ void create_square_vertices(const CoordinateSystem *coord, float worldX,
  * @param worldX 方格中心的世界X坐标
  * @param worldY 方格中心的世界Y坐标
  * @param worldSize 方格的世界尺寸
- * @param vertices
- * 输出的顶点数组（需要至少16个float的空间：4个顶点，每个顶点有位置和纹理坐标）
+ * @param vertices 输出的顶点数组（需要至少16个float的空间：4个顶点，每个顶点有位置和纹理坐标）
  */
 void create_square_vertices_with_texcoords(const CoordinateSystem *coord,
                                            float worldX, float worldY,
@@ -94,4 +117,16 @@ void create_square_vertices_with_texcoords(const CoordinateSystem *coord,
     vertices[i * 4 + 2] = texCoords[i * 2];     // U
     vertices[i * 4 + 3] = texCoords[i * 2 + 1]; // V
   }
+}
+
+/**
+ * @brief 更新坐标系统的屏幕尺寸
+ *
+ * @param coord 坐标系统指针
+ * @param screenWidth 新的屏幕宽度
+ * @param screenHeight 新的屏幕高度
+ */
+void update_coordinate_screen_size(CoordinateSystem *coord, int screenWidth, int screenHeight) {
+    coord->screenWidth = screenWidth;
+    coord->screenHeight = screenHeight;
 }

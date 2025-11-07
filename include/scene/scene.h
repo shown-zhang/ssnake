@@ -35,8 +35,17 @@ int init_game_scene(GameScene *scene, int gridWidth, int gridHeight,
 void render_game_scene(GameScene *scene);
 
 /**
- * @brief 清理场景资源
- *
+ * @brief 清理游戏场景资源
+ * 
  * @param scene 场景指针
  */
 void cleanup_game_scene(GameScene *scene);
+
+/**
+ * @brief 更新游戏场景以适应新的窗口尺寸
+ * 
+ * @param scene 场景指针
+ * @param screenWidth 新的屏幕宽度
+ * @param screenHeight 新的屏幕高度
+ */
+void update_game_scene_size(GameScene *scene, int screenWidth, int screenHeight);

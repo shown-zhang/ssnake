@@ -57,9 +57,28 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   if (!appstate) {
     return SDL_APP_FAILURE;
   }
+  AppState *state = (AppState *)appstate;
+  
   if (event->type == SDL_EVENT_QUIT) {
     return SDL_APP_SUCCESS;
   }
+  
+  // 处理窗口大小变化事件
+  if (event->type == SDL_EVENT_WINDOW_RESIZED) {
+    SDL_Window *window = SDL_GetWindowFromID(event->window.windowID);
+    if (window == state->window) {
+      // 获取新的窗口尺寸
+      int newWidth, newHeight;
+      SDL_GetWindowSize(window, &newWidth, &newHeight);
+      
+      // 更新游戏场景以适应新的窗口尺寸
+      update_game_scene_size(state->scene, newWidth, newHeight);
+      
+      // 更新视口
+      glViewport(0, 0, newWidth, newHeight);
+    }
+  }
+  
   return SDL_APP_CONTINUE;
 }
 
