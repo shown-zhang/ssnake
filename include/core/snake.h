@@ -4,10 +4,18 @@
 #include <stdbool.h>
 
 // 蛇身体节点结构体
+// 增加elementType字段
+// 增加elementLevel字段
+// 增加subElementType字段
+// 如果三个字段为0，则表示普通元素
+// 初始化时，elementType、elementLevel、subElementType均为0
 typedef struct {
-  KNode node; // 链表节点
-  int x;      // 网格X坐标
-  int y;      // 网格Y坐标
+  KNode node;         // 链表节点
+  int x;              // 网格X坐标
+  int y;              // 网格Y坐标
+  int elementType;    // 元素类型
+  int elementLevel;   // 元素级别
+  int subElementType; // 子元素类型
 } SnakeSegment;
 
 // 蛇结构体
