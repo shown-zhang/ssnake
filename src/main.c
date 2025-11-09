@@ -1,4 +1,5 @@
 #define SDL_MAIN_USE_CALLBACKS
+#include "core/food.h"
 #include "render/gl_init.h"
 #include "scene/scene.h"
 #include "utils/ini_parser.h"
@@ -189,17 +190,57 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                      state->gameState.config.gridSize * 0.8f, snakeColor);
   }
 
-  // 渲染食物（红色）
-  float foodColor[] = {1.0f, 0.0f, 0.0f, 1.0f}; // RGBA红色
+  // 渲染食物（根据元素类型和子元素类型设置边框和填充颜色）
   knode_for_each(node, &state->foodManager.head) {
     Food *food = container_of(node, Food, node);
     float x = food->x * state->gameState.config.gridSize +
               state->gameState.config.gridSize / 2.0f;
     float y = food->y * state->gameState.config.gridSize +
               state->gameState.config.gridSize / 2.0f;
+
+    // 获取元素颜色（边框颜色）
+    FoodColor borderColor = get_food_color(food);
+    float borderColorArray[] = {borderColor.r, borderColor.g, borderColor.b,
+                                borderColor.a};
+
+    // 获取子元素颜色（填充颜色）
+    FoodColor fillColor = get_detailed_food_color(
+        food->elementType, food->elementLevel, food->subElementType);
+    float fillColorArray[] = {fillColor.r, fillColor.g, fillColor.b,
+                              fillColor.a};
+
+    // 先渲染内部填充（较小的矩形）
     render_rectangle(&state->scene->gridRenderer, x, y,
                      state->gameState.config.gridSize * 0.6f,
-                     state->gameState.config.gridSize * 0.6f, foodColor);
+                     state->gameState.config.gridSize * 0.6f, fillColorArray);
+
+    // 再渲染边框（较大的矩形，但使用线框模式或半透明）
+    // 使用线框模式渲染边框，确保边框可见
+    float borderWidth = state->gameState.config.gridSize * 0.1f;
+
+    // 渲染上边框
+    render_rectangle(&state->scene->gridRenderer, x,
+                     y + state->gameState.config.gridSize * 0.3f,
+                     state->gameState.config.gridSize * 0.8f, borderWidth,
+                     borderColorArray);
+
+    // 渲染下边框
+    render_rectangle(&state->scene->gridRenderer, x,
+                     y - state->gameState.config.gridSize * 0.3f,
+                     state->gameState.config.gridSize * 0.8f, borderWidth,
+                     borderColorArray);
+
+    // 渲染左边框
+    render_rectangle(&state->scene->gridRenderer,
+                     x - state->gameState.config.gridSize * 0.3f, y,
+                     borderWidth, state->gameState.config.gridSize * 0.6f,
+                     borderColorArray);
+
+    // 渲染右边框
+    render_rectangle(&state->scene->gridRenderer,
+                     x + state->gameState.config.gridSize * 0.3f, y,
+                     borderWidth, state->gameState.config.gridSize * 0.6f,
+                     borderColorArray);
   }
 
   // 交换缓冲区

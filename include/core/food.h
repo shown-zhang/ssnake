@@ -3,6 +3,14 @@
 #include "utils/knode.h"
 #include <stdbool.h>
 
+// 颜色结构体
+typedef struct {
+  float r; // 红色分量 (0.0 - 1.0)
+  float g; // 绿色分量 (0.0 - 1.0)
+  float b; // 蓝色分量 (0.0 - 1.0)
+  float a; // 透明度分量 (0.0 - 1.0)
+} FoodColor;
+
 // 食物结构体
 typedef struct {
   KNode node;         // 链表节点
@@ -131,3 +139,50 @@ bool is_food_special(const Food *food);
 bool generate_special_food(FoodManager *manager, int gridWidth, int gridHeight,
                            const void *snake, int elementType, int elementLevel,
                            int subElementType);
+
+/**
+ * @brief 获取食物的颜色
+ * @param food 食物指针
+ * @return 食物的颜色
+ */
+FoodColor get_food_color(const Food *food);
+
+/**
+ * @brief 根据元素类型和级别获取基础颜色
+ * @param elementType 元素类型
+ * @param elementLevel 元素级别
+ * @return 基础颜色
+ */
+FoodColor get_base_element_color(int elementType, int elementLevel);
+
+/**
+ * @brief 根据子元素类型获取详细颜色
+ * @param elementType 元素类型
+ * @param elementLevel 元素级别
+ * @param subElementType 子元素类型
+ * @return 详细颜色
+ */
+FoodColor get_detailed_food_color(int elementType, int elementLevel,
+                                  int subElementType);
+
+/**
+ * @brief 获取食物的效果描述
+ * @param food 食物指针
+ * @return 效果描述字符串
+ */
+const char *get_food_effect_description(const Food *food);
+
+/**
+ * @brief 应用食物效果到蛇
+ * @param food 食物指针
+ * @param snake 蛇指针
+ * @return 应用是否成功
+ */
+bool apply_food_effect(const Food *food, void *snake);
+
+/**
+ * @brief 获取食物效果的数值（如增益/减益值）
+ * @param food 食物指针
+ * @return 效果数值
+ */
+int get_food_effect_value(const Food *food);
