@@ -1,24 +1,65 @@
 #define SDL_MAIN_USE_CALLBACKS
 #include "render/gl_init.h"
 #include "scene/scene.h"
+#include "utils/ini_parser.h"
 #include "utils/memory.h"
 #include "window/window.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <glad/glad.h>
+#include <stdio.h>
+
+// 从INI文件加载游戏配置
+static GameConfig load_game_config() {
+  GameConfig config = {.gridWidth = 25,
+                       .gridHeight = 25,
+                       .gridSize = 10,
+                       .initialSnakeLength = 3,
+                       .maxFoodCount = 5,
+                       .moveInterval = 0.3f};
+
+  // 加载INI配置文件
+  ini_file_t *ini = ini_load("assets/config/game.ini");
+  if (ini == NULL) {
+    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                "无法加载game.ini配置文件，使用默认配置");
+    return config;
+  }
+
+  // 读取网格设置
+  config.gridWidth = ini_get_int(ini, "grid", "width", config.gridWidth);
+  config.gridHeight = ini_get_int(ini, "grid", "height", config.gridHeight);
+  config.gridSize = ini_get_int(ini, "grid", "size", config.gridSize);
+
+  // 读取蛇的设置
+  config.initialSnakeLength =
+      ini_get_int(ini, "snake", "initial_length", config.initialSnakeLength);
+
+  // 读取食物的设置
+  config.maxFoodCount =
+      ini_get_int(ini, "food", "max_count", config.maxFoodCount);
+
+  // 读取游戏逻辑设置
+  config.moveInterval =
+      ini_get_double(ini, "game", "move_interval", config.moveInterval);
+
+  SDL_Log("从game.ini加载游戏配置：网格=%dx%d，格子大小=%d，蛇长=%d，食物数=%"
+          "d，移动间隔=%.2f秒",
+          config.gridWidth, config.gridHeight, config.gridSize,
+          config.initialSnakeLength, config.maxFoodCount, config.moveInterval);
+
+  ini_free(ini);
+  return config;
+}
 
 // 游戏配置
-static const GameConfig gameConfig = {
-    .gridWidth = 25,
-    .gridHeight = 25,
-    .gridSize = 10,
-    .initialSnakeLength = 3,
-    .maxFoodCount = 5,
-    .moveInterval = 0.3f // 150毫秒移动一次
-};
+static GameConfig gameConfig;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
+  // 加载游戏配置
+  gameConfig = load_game_config();
+
   // 元数据
   init_app_meta_data();
   // 分配应用状态
