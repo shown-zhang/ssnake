@@ -2,9 +2,18 @@
 
 #include "utils/knode.h"
 #include "utils/memory.h"
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifdef _WIN32
+#include <conio.h>
+#else
+// Unix-like系统的替代实现
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
+
+#endif
 
 #define GRID_WIDTH 13
 #define GRID_HEIGHT 13
@@ -44,6 +53,7 @@ typedef struct {
   Grid grid[GRID_WIDTH * GRID_HEIGHT];
   KNode snakeHead;         /**< 蛇头节点指针 */
   DirectionEnum direction; /**< 蛇头方向 */
+  KNode foodHead;          /**< 食物节点指针 */
 } GameState;
 
 // 初始化游戏状态
@@ -155,44 +165,25 @@ void update_grid(GameState *state) {
   }
 }
 
-void move_snake(GameState *state) {
-
-  // 1. 获取头结点
-  SnakeNode *head = container_of(state->snakeHead.next, SnakeNode, node);
-  // 2. 判断当前方向
-
-  // 3. 生成一个新的头结点
-  int new_index = head->index;
-  switch (state->direction) {
-  case UP:
-    new_index -= GRID_WIDTH;
-    break;
-  case DOWN:
-    new_index += GRID_WIDTH;
-    break;
-  case LEFT:
-    new_index -= 1;
-    break;
-  case RIGHT:
-    new_index += 1;
-    break;
-  default:
-    break;
-  }
-
+void check_collision(GameState *state, int new_index) {
   // 3.1 检查新索引是否超出边界
   if (new_index < 0 || new_index >= GRID_WIDTH * GRID_HEIGHT) {
     printf("Error: Snake moved out of bounds at index %d.\n", new_index);
     state->is_over = 1;
     return;
   }
-
-  // 4. 检查新索引是否与蛇身冲突
+  // 1. 获取头结点
+  SnakeNode *head = container_of(state->snakeHead.next, SnakeNode, node);
+  // 2. 检查头结点是否与其他节点冲突
   KNode *node;
   knode_for_each(node, &state->snakeHead) {
-    SnakeNode *snake_node = container_of(node, SnakeNode, node);
-    if (snake_node->index == new_index) {
-      printf("Error: Snake collided with itself at index %d.\n", new_index);
+    if (node->next == &state->snakeHead) {
+      break;
+    }
+
+    SnakeNode *snake_node = container_of(node->next, SnakeNode, node);
+    if (snake_node->index == head->index) {
+      printf("Error: Snake collided with itself at index %d.\n", head->index);
       state->is_over = 1;
       return;
     }
@@ -217,6 +208,33 @@ void move_snake(GameState *state) {
     state->is_over = 1;
     return;
   }
+}
+
+void move_snake(GameState *state) {
+  SnakeNode *head = container_of(state->snakeHead.next, SnakeNode, node);
+
+  int new_index = head->index;
+  switch (state->direction) {
+  case UP:
+    new_index -= GRID_WIDTH;
+    break;
+  case DOWN:
+    new_index += GRID_WIDTH;
+    break;
+  case LEFT:
+    new_index -= 1;
+    break;
+  case RIGHT:
+    new_index += 1;
+    break;
+  default:
+    break;
+  }
+
+  check_collision(state, new_index);
+  if (state->is_over) {
+    return;
+  }
 
   // 4. 将新头结点
   SnakeNode *new_head = NULL;
@@ -231,19 +249,65 @@ void move_snake(GameState *state) {
   // 5.
   // 依次遍历链表，将每个节点更新为其下一个节点（复制所有的字段）
   // index也需要复制
+  KNode *node;
   knode_for_each(node, &state->snakeHead) {
+    if (knode_is_last(node, &state->snakeHead)) {
+      break;
+    }
     SnakeNode *snake_node = container_of(node, SnakeNode, node);
-    int index = snake_node->index;
     SnakeNode *next_snake_node = container_of(node->next, SnakeNode, node);
-    *snake_node = *next_snake_node;
-    snake_node->index = index;
+    snake_node->is_head = next_snake_node->is_head;
   }
 
   // 6. 移除链表最后一个节点（尾结点）
   KNode *tail = state->snakeHead.prev;
-  if (tail != &state->snakeHead) {
+  if (!knode_is_head(tail, &state->snakeHead)) {
     knode_del(tail);
     SnakeNode *snake_tail = container_of(tail, SnakeNode, node);
     FREE(snake_tail);
+  }
+}
+
+// 监听用户输入
+void listen_input(GameState *state) {
+  if (kbhit()) {
+    int ch = getchar();
+    switch (ch) {
+    case 'w':
+      if (state->direction != DOWN) {
+        state->direction = UP;
+      }
+      break;
+    case 's':
+      if (state->direction != UP) {
+        state->direction = DOWN;
+      }
+      break;
+    case 'a':
+      if (state->direction != RIGHT) {
+        state->direction = LEFT;
+      }
+      break;
+    case 'd':
+      if (state->direction != LEFT) {
+        state->direction = RIGHT;
+      }
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+// 打印链表
+void print_snake(GameState *state) {
+  KNode *node;
+  knode_for_each(node, &state->snakeHead) {
+    SnakeNode *snake_node = container_of(node, SnakeNode, node);
+    printf("index: %d, is_head: %d\n", snake_node->index, snake_node->is_head);
+
+    if (knode_is_last(node, &state->snakeHead)) {
+      break;
+    }
   }
 }
